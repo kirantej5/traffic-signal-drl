@@ -1,0 +1,29 @@
+<?xml version="1.16" encoding="UTF-8"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <!-- Vehicle types definitions -->
+    <vType id="passenger" accel="2.6" decel="4.5" sigma="0.5" length="5.0" minGap="2.5" maxSpeed="16.67" guiShape="passenger" color="0,1,0"/>
+    <vType id="truck" accel="1.2" decel="3.0" sigma="0.5" length="12.0" minGap="3.0" maxSpeed="11.11" guiShape="truck" color="1,0,0"/>
+
+    <!-- Routes definitions -->
+    <route id="N_to_S" edges="N2C C2S"/>
+    <route id="N_to_E" edges="N2C C2E"/>
+    <route id="N_to_W" edges="N2C C2W"/>
+    
+    <route id="S_to_N" edges="S2C C2N"/>
+    <route id="S_to_E" edges="S2C C2E"/>
+    <route id="S_to_W" edges="S2C C2W"/>
+    
+    <route id="E_to_W" edges="E2C C2W"/>
+    <route id="E_to_N" edges="E2C C2N"/>
+    <route id="E_to_S" edges="E2C C2S"/>
+    
+    <route id="W_to_E" edges="W2C C2E"/>
+    <route id="W_to_N" edges="W2C C2N"/>
+    <route id="W_to_S" edges="W2C C2S"/>
+
+    <!-- Sample vehicle flows -->
+    <flow id="flow_n" type="passenger" route="N_to_S" begin="0" end="3600" period="10" departLane="best" departSpeed="max"/>
+    <flow id="flow_s" type="passenger" route="S_to_N" begin="0" end="3600" period="12" departLane="best" departSpeed="max"/>
+    <flow id="flow_e" type="passenger" route="E_to_W" begin="0" end="3600" period="15" departLane="best" departSpeed="max"/>
+    <flow id="flow_w" type="passenger" route="W_to_E" begin="0" end="3600" period="15" departLane="best" departSpeed="max"/>
+</routes>

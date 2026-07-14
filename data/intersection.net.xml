@@ -1,0 +1,94 @@
+<?xml version="1.16" encoding="UTF-8"?>
+<net version="1.16" junctionCornerDetail="5" limitTurnSpeed="5.50" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
+    <location netOffset="250.00,250.00" convBoundary="0.00,0.00,500.00,500.00" origBoundary="-250.00,-250.00,250.00,250.00" projParameter="!"/>
+
+    <!-- Inner edges / junctions connection settings -->
+    <edge id="C2E" from="C" to="E" priority="2" numLanes="3" speed="13.89">
+        <lane id="C2E_0" index="0" speed="13.89" length="250.00" shape="250.00,242.00 500.00,242.00"/>
+        <lane id="C2E_1" index="1" speed="13.89" length="250.00" shape="250.00,245.20 500.00,245.20"/>
+        <lane id="C2E_2" index="2" speed="13.89" length="250.00" shape="250.00,248.40 500.00,248.40"/>
+    </edge>
+    <edge id="C2N" from="C" to="N" priority="2" numLanes="3" speed="13.89">
+        <lane id="C2N_0" index="0" speed="13.89" length="250.00" shape="258.00,250.00 258.00,500.00"/>
+        <lane id="C2N_1" index="1" speed="13.89" length="250.00" shape="254.80,250.00 254.80,500.00"/>
+        <lane id="C2N_2" index="2" speed="13.89" length="250.00" shape="251.60,250.00 251.60,500.00"/>
+    </edge>
+    <edge id="C2S" from="C" to="S" priority="2" numLanes="3" speed="13.89">
+        <lane id="C2S_0" index="0" speed="13.89" length="250.00" shape="242.00,250.00 242.00,0.00"/>
+        <lane id="C2S_1" index="1" speed="13.89" length="250.00" shape="245.20,250.00 245.20,0.00"/>
+        <lane id="C2S_2" index="2" speed="13.89" length="250.00" shape="248.40,250.00 248.40,0.00"/>
+    </edge>
+    <edge id="C2W" from="C" to="W" priority="2" numLanes="3" speed="13.89">
+        <lane id="C2W_0" index="0" speed="13.89" length="250.00" shape="250.00,258.00 0.00,258.00"/>
+        <lane id="C2W_1" index="1" speed="13.89" length="250.00" shape="250.00,254.80 0.00,254.80"/>
+        <lane id="C2W_2" index="2" speed="13.89" length="250.00" shape="250.00,251.60 0.00,251.60"/>
+    </edge>
+    <edge id="E2C" from="E" to="C" priority="2" numLanes="3" speed="13.89">
+        <lane id="E2C_0" index="0" speed="13.89" length="250.00" shape="500.00,258.00 250.00,258.00"/>
+        <lane id="E2C_1" index="1" speed="13.89" length="250.00" shape="500.00,254.80 250.00,254.80"/>
+        <lane id="E2C_2" index="2" speed="13.89" length="250.00" shape="500.00,251.60 250.00,251.60"/>
+    </edge>
+    <edge id="N2C" from="N" to="C" priority="2" numLanes="3" speed="13.89">
+        <lane id="N2C_0" index="0" speed="13.89" length="250.00" shape="242.00,500.00 242.00,250.00"/>
+        <lane id="N2C_1" index="1" speed="13.89" length="250.00" shape="245.20,500.00 245.20,250.00"/>
+        <lane id="N2C_2" index="2" speed="13.89" length="250.00" shape="248.40,500.00 248.40,250.00"/>
+    </edge>
+    <edge id="S2C" from="S" to="C" priority="2" numLanes="3" speed="13.89">
+        <lane id="S2C_0" index="0" speed="13.89" length="250.00" shape="258.00,0.00 258.00,250.00"/>
+        <lane id="S2C_1" index="1" speed="13.89" length="250.00" shape="254.80,0.00 254.80,250.00"/>
+        <lane id="S2C_2" index="2" speed="13.89" length="250.00" shape="251.60,0.00 251.60,250.00"/>
+    </edge>
+    <edge id="W2C" from="W" to="C" priority="2" numLanes="3" speed="13.89">
+        <lane id="W2C_0" index="0" speed="13.89" length="250.00" shape="0.00,242.00 250.00,242.00"/>
+        <lane id="W2C_1" index="1" speed="13.89" length="250.00" shape="0.00,245.20 250.00,245.20"/>
+        <lane id="W2C_2" index="2" speed="13.89" length="250.00" shape="0.00,248.40 250.00,248.40"/>
+    </edge>
+
+    <!-- Junctions -->
+    <junction id="C" type="traffic_light" x="250.00" y="250.00" incLanes="N2C_0 N2C_1 N2C_2 E2C_0 E2C_1 E2C_2 S2C_0 S2C_1 S2C_2 W2C_0 W2C_1 W2C_2" intLanes="" shape="238.80,261.20 261.20,261.20 261.20,238.80 238.80,238.80"/>
+    <junction id="E" type="priority" x="500.00" y="250.00" incLanes="C2E_0 C2E_1 C2E_2" intLanes="" shape="500.00,250.00 500.00,238.80 500.00,250.00"/>
+    <junction id="N" type="priority" x="250.00" y="500.00" incLanes="C2N_0 C2N_1 C2N_2" intLanes="" shape="250.00,500.00 261.20,500.00 250.00,500.00"/>
+    <junction id="S" type="priority" x="250.00" y="0.00" incLanes="C2S_0 C2S_1 C2S_2" intLanes="" shape="250.00,0.00 238.80,0.00 250.00,0.00"/>
+    <junction id="W" type="priority" x="0.00" y="250.00" incLanes="C2W_0 C2W_1 C2W_2" intLanes="" shape="0.00,250.00 0.00,261.20 0.00,250.00"/>
+
+    <!-- Traffic Light Logic for C -->
+    <tlLogic id="C" type="static" programID="0" offset="0">
+        <!-- 
+            Phase order:
+            0: North/South Green, East/West Red (GGrrrrGGrrrr)
+            1: North/South Yellow, East/West Red (yyrrrryyrrrr)
+            2: North/South Red, East/West Green (rrrrGGrrrrGG)
+            3: North/South Red, East/West Yellow (rrrryyrrrryy)
+        -->
+        <phase duration="31" state="GGggrrrrGGggrrrr"/>
+        <phase duration="4"  state="yyggrrrryyggrrrr"/>
+        <phase duration="6"  state="rrGGrrrrrrGGrrrr"/>
+        <phase duration="4"  state="rryyrrrrrryyrrrr"/>
+        <phase duration="31" state="rrrrGGggrrrrGGgg"/>
+        <phase duration="4"  state="rrrryyggrrrryygg"/>
+        <phase duration="6"  state="rrrrrrGGrrrrrrGG"/>
+        <phase duration="4"  state="rrrrrryyrrrrrryy"/>
+    </tlLogic>
+
+    <!-- Connections -->
+    <!-- North incoming to West, South, East -->
+    <connection from="N2C" to="C2W" fromLane="0" toLane="0"/>
+    <connection from="N2C" to="C2S" fromLane="1" toLane="1"/>
+    <connection from="N2C" to="C2E" fromLane="2" toLane="2"/>
+
+    <!-- East incoming to North, West, South -->
+    <connection from="E2C" to="C2N" fromLane="0" toLane="0"/>
+    <connection from="E2C" to="C2W" fromLane="1" toLane="1"/>
+    <connection from="E2C" to="C2S" fromLane="2" toLane="2"/>
+
+    <!-- South incoming to East, North, West -->
+    <connection from="S2C" to="C2E" fromLane="0" toLane="0"/>
+    <connection from="S2C" to="C2N" fromLane="1" toLane="1"/>
+    <connection from="S2C" to="C2W" fromLane="2" toLane="2"/>
+
+    <!-- West incoming to South, East, North -->
+    <connection from="W2C" to="C2S" fromLane="0" toLane="0"/>
+    <connection from="W2C" to="C2E" fromLane="1" toLane="1"/>
+    <connection from="W2C" to="C2N" fromLane="2" toLane="2"/>
+
+</net>
