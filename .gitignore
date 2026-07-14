@@ -72,7 +72,5 @@ instance/
 *.sbtr
 trips.trips.xml
 *output.xml
-results/*.png
-results/*.csv
 models/*.zip
 models/checkpoints/

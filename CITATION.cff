@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Tej"
+    given-names: "Kiran"
+title: "GPU-Accelerated Deep Reinforcement Learning for Adaptive Traffic Signal Control"
+version: 1.0.0
+date-released: 2026-07-14
+url: "https://github.com/kirantej5/traffic-signal-drl"

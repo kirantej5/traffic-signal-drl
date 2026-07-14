@@ -1,0 +1,8 @@
+metric,value
+total_vehicles,1420
+average_waiting_time_sec,12.45
+average_queue_length,2.34
+throughput_vehs_per_hour,1380
+average_speed_mps,11.89
+gpu_memory_allocated_mb,512
+training_duration_sec,1820
