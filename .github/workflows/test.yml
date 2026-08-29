@@ -21,6 +21,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
@@ -35,7 +36,14 @@ jobs:
           # Treat all other issues as warnings
           flake8 src/ --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
 
-      - name: Verify imports
+      - name: Verify imports and Smoke Test
         run: |
           python -c "from src.environment import SumoTrafficEnv; print('Environment module OK')"
           python -c "from src.utils import check_gpu_status; print('Utils module OK')"
+          python -c "
+          from src.environment import SumoTrafficEnv
+          env = SumoTrafficEnv(net_file='data/intersection.net.xml', route_file='data/intersection.rou.xml', sumo_cfg_file='data/intersection.sumocfg')
+          print('Environment instantiated successfully!')
+          assert env.action_space.n == 4
+          print('Smoke test passed!')
+          "
