@@ -97,7 +97,7 @@ class MAPPOInferenceController:
     def __init__(self, tls_ids, model_path, obs_dim=38):
         self.tls_ids  = tls_ids
         self.obs_dim  = obs_dim
-        self.actors   = {}
+        self.use_model = False
         self._load_model(model_path)
 
     def _load_model(self, model_path):
@@ -105,20 +105,19 @@ class MAPPOInferenceController:
             import torch
             from agents.mappo_agent import MAPPOTrafficController
             self.controller = MAPPOTrafficController(
-                agent_ids=self.tls_ids,
+                n_agents=len(self.tls_ids),
                 obs_dim=self.obs_dim,
-                global_state_dim=self.obs_dim * len(self.tls_ids),
                 action_dim=2,
             )
             self.controller.load(model_path)
             self.use_model = True
             print(f"[OK] Loaded MAPPO model from {model_path}")
         except Exception as e:
-            print(f"[WARN] Could not load model ({e}). Falling back to random policy.")
+            print(f"[WARN] Could not load model ({e}). Falling back to rule-based policy.")
             self.use_model = False
 
     def _get_obs(self, tid, controlled_lanes):
-        obs = np.zeros(38, dtype=np.float32)
+        obs = np.zeros(self.obs_dim, dtype=np.float32)
         lanes = controlled_lanes.get(tid, [])[:8]
         for i, lane in enumerate(lanes):
             try:
@@ -131,21 +130,18 @@ class MAPPOInferenceController:
 
     def act(self, tls_ids, controlled_lanes, step, yellow_timers):
         obs_dict = {tid: self._get_obs(tid, controlled_lanes) for tid in tls_ids}
-        import torch
+        if self.use_model:
+            model_actions, _, _, _ = self.controller.select_actions(obs_dict, deterministic=True)
+        else:
+            model_actions = {tid: int(step // 30) % 2 for tid in tls_ids}
+
         actions = {}
         for tid in tls_ids:
             if yellow_timers.get(tid, 0) > 0:
                 yellow_timers[tid] -= 1
                 actions[tid] = None  # in yellow phase, don't override
                 continue
-            if self.use_model:
-                obs_t = torch.FloatTensor(obs_dict[tid]).unsqueeze(0)
-                with torch.no_grad():
-                    logits = self.controller.actors[tid].actor_net(obs_t)
-                    action = torch.argmax(logits).item()
-            else:
-                action = int(step // 30) % 2
-            actions[tid] = action
+            actions[tid] = model_actions.get(tid, 0)
         return actions
 
 

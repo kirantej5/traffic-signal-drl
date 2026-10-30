@@ -197,12 +197,9 @@ HTML = """
   <h3>Live Intersection Status — Queue Length (veh) &bull; Speed (m/s)</h3>
   <div class="tls-grid">
     {% for tid, ag in data.agents.items() %}
-    {% set q = ag.queue %}
-    {% set hue = [max(0, min(120, int(120 - q * 15))), '60%', '45%'] %}
-    {% set bg = 'rgba(%d,%d,%d,0.7)' % (max(0,255-q*30), min(255, 100+q*10), 40) %}
     <div class="tls-cell" style="background:{{ ag.color }}">
       <div class="name">{{ tid }}</div>
-      <div class="queue">{{ "%.1f"|format(q) }}</div>
+      <div class="queue">{{ "%.1f"|format(ag.queue) }}</div>
       <div class="spd">{{ "%.1f"|format(ag.speed) }} m/s</div>
       <div style="font-size:.65rem;margin-top:2px">
         <span class="phase-{{ ag.phase_state }}">{{ ag.phase_label }}</span>
@@ -384,17 +381,15 @@ def simulation_thread(args):
         _state["mode"]    = "Fixed-Time" if args.fixed_time else "MAPPO"
 
     # Load model if MAPPO
-    actors = {}
+    ctrl = None
     if not args.fixed_time:
         try:
             import torch
             from agents.mappo_agent import MAPPOTrafficController
             ctrl = MAPPOTrafficController(
-                agent_ids=tls_ids, obs_dim=38,
-                global_state_dim=38*len(tls_ids), action_dim=2,
+                n_agents=len(tls_ids), obs_dim=38, action_dim=2,
             )
             ctrl.load(os.path.join(PROJECT_ROOT, args.model_path))
-            actors = ctrl.actors
             print(f"[OK] MAPPO model loaded ({len(tls_ids)} agents)")
         except Exception as e:
             print(f"[WARN] Model load failed ({e}), using random policy")
@@ -438,21 +433,21 @@ def simulation_thread(args):
             }
 
         # ── Apply MAPPO actions ──
-        if actors and not args.fixed_time:
+        if ctrl and not args.fixed_time:
             try:
-                import torch
+                obs_dict = {
+                    tid: np.array([
+                        agents_snapshot[tid]["queue"],
+                        agents_snapshot[tid]["speed"] / 15.0,
+                    ] + [0.0]*36, dtype=np.float32)
+                    for tid in tls_ids
+                }
+                model_actions, _, _, _ = ctrl.select_actions(obs_dict, deterministic=True)
                 for tid in tls_ids:
                     if yellow_timers.get(tid, 0) > 0:
                         yellow_timers[tid] -= 1
                         continue
-                    obs = np.array([
-                        agents_snapshot[tid]["queue"],
-                        agents_snapshot[tid]["speed"] / 15.0,
-                    ] + [0.0]*36, dtype=np.float32)
-                    obs_t  = torch.FloatTensor(obs).unsqueeze(0)
-                    with torch.no_grad():
-                        logits = actors[tid].actor_net(obs_t)
-                        action = torch.argmax(logits).item()
+                    action = model_actions.get(tid, 0)
                     logic  = traci.trafficlight.getAllProgramLogics(tid)[0]
                     greens = [i for i,ph in enumerate(logic.phases) if 'G' in ph.state or 'g' in ph.state]
                     if greens:
