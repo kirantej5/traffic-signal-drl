@@ -127,10 +127,25 @@ Benchmark against Webster Fixed-Time and Actuated controllers:
 ```bash
 python src/evaluate_marl.py --eval-steps 600
 ```
-To launch visual inspection via SUMO-GUI:
+
+### 5. Interactive Visualizations & Live Monitoring
+
+#### A. Real-Time Web Dashboard (Browser)
+Watch live traffic metrics, queue progression, mean speeds, and per-intersection status in an auto-updating web browser interface:
 ```bash
-python src/evaluate_marl.py --eval-steps 600 --gui
+python scripts/dashboard.py
 ```
+*Open http://localhost:5000 to view the live dashboard during simulation.*
+- Compare against fixed-time baseline: `python scripts/dashboard.py --fixed-time`
+
+#### B. SUMO-GUI Visual Mode (Live Micro-simulation)
+Watch vehicles move through the 4×4 neighborhood grid with dynamic signal phases and color-coded vehicle speeds:
+```bash
+python scripts/run_gui.py
+```
+- Compare with fixed-time baseline: `python scripts/run_gui.py --fixed-time`
+- Adjust playback speed: `python scripts/run_gui.py --delay 100` (delay in ms/step)
+- Controls inside SUMO-GUI: `[Space]` Play/Pause, `[Ctrl+A]` Fit all in view, `[+] / [-]` Speed up/slow down.
 
 ---
 

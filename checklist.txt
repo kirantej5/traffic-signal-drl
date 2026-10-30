@@ -158,5 +158,19 @@ paper submission. Mark items as [X] when complete.
         - Completed full manuscript draft in `docs/research_paper_draft.md`.
 [X] 9.8 Produce high-resolution figures (300 DPI):
         - Queue Progression figure generated at `results/comparative_plots/comparative_queue_progression.png`.
+
+================================================================================
+[ PHASE 10 ] INTERACTIVE SIMULATION & VISUALIZATION TOOLS
+================================================================================
+[X] 10.1 Real-Time Web Monitoring Dashboard (`scripts/dashboard.py`):
+         - Flask-powered live web dashboard auto-refreshing at 1 Hz.
+         - Displays network mean queue length and speed time series (Chart.js).
+         - Real-time 4x4 intersection heat grid with phase indicators (Green/Yellow/Red).
+         - Live summary stats: active vehicles, throughput (veh/h), teleports, Jain's fairness.
+[X] 10.2 SUMO-GUI Visual Inspection Mode (`scripts/run_gui.py`):
+         - Dedicated visual execution script with custom XML scheme (`configs/gui_settings.xml`).
+         - Color-codes vehicle speeds (red=stopped, yellow=medium, green=fast).
+         - Live terminal HUD tracking sim-time, active vehicles, and mean queue.
+         - Side-by-side mode toggle: compare trained MAPPO vs Webster Fixed-Time baseline.
 ================================================================================
 

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SUMO GUI Settings for MARL Traffic Signal Visualization
+  Provides color-coded traffic states, larger vehicles, and cleaner view.
+  Usage: Referenced automatically by scripts/run_gui.py
+-->
+<viewsettings>
+    <scheme name="MARL Visualization">
+
+        <!-- Background -->
+        <background backgroundColor="25,25,35" showGrid="0" gridXSize="100.00" gridYSize="100.00"/>
+
+        <!-- Edges / Roads -->
+        <edges laneEdgeMode="0" edgeColorMode="0" laneShowBorders="1" showLinkRules="1"
+               showRails="1" hideConnectors="0" showSublanes="0" spreadSuperposed="0"
+               edgeMinSize="0.00" edgeName="0" internalEdgeName="0"
+               cwaEdgeName="0" streetName="0" edgeValue="0" edgeScaleSize="0">
+            <colorScheme name="uniform">
+                <entry color="70,70,90" name="road"/>
+            </colorScheme>
+        </edges>
+
+        <!-- Vehicles — larger, color-coded by speed -->
+        <vehicles vehicleMode="9" vehicleQuality="2" showBlinker="1"
+                  vehicleMinSize="2.00" vehicleExaggeration="2.50"
+                  showMinGap="0" vehicleName="0" vehicleValue="0" vehicleScaleSize="0">
+            <colorScheme name="by speed">
+                <entry color="255,0,0"   threshold="0.0"  name="stopped"/>
+                <entry color="255,165,0" threshold="5.0"  name="slow"/>
+                <entry color="255,255,0" threshold="10.0" name="medium"/>
+                <entry color="0,255,100" threshold="16.0" name="fast"/>
+            </colorScheme>
+        </vehicles>
+
+        <!-- Traffic Lights — large, colored by state -->
+        <junctions junctionMode="0" drawShape="1" drawCrossingsAndWalkingareas="1"
+                   junctionExaggeration="1.50" junctionMinSize="2.00"
+                   junctionName="1" junctionID="1">
+            <colorScheme name="uniform">
+                <entry color="30,30,50" name="junction"/>
+            </colorScheme>
+        </junctions>
+
+        <!-- POIs and Polygons -->
+        <pois poiMode="0" poiSize="0.00" poiName="0" poiColor="1"/>
+        <polys polyMode="0" polySize="0.00" polyName="0" polyColor="1"/>
+
+        <!-- Legends and info overlays -->
+        <legend showSpeeds="1" showSizeLegend="1"/>
+
+        <!-- Delay for smooth playback -->
+        <delay value="50"/>
+
+        <!-- Show simulation time -->
+        <breakpoints/>
+    </scheme>
+</viewsettings>
+

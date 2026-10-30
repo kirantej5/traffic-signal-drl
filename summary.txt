@@ -179,7 +179,8 @@ The project structure is structured as follows:
   traffic-signal-drl/
   ├── configs/                      <- Simulation and algorithm hyperparameters
   │   ├── mappo_config.yaml         <- MAPPO learning rate, clipping, batch size
-  │   └── network_4x4.yaml          <- Grid dimensions, lane count, speed limits
+  │   ├── network_4x4.yaml          <- Grid dimensions, lane count, speed limits
+  │   └── gui_settings.xml          <- Custom color schemes and speed modes for SUMO-GUI
   ├── data/                         <- SUMO network and route configurations
   │   ├── generate_neighborhood.py  <- Multi-intersection grid generator
   │   ├── neighborhood.net.xml      <- Compiled 16/25-intersection grid network
@@ -193,6 +194,10 @@ The project structure is structured as follows:
   ├── results/                      <- Output evaluation tables, logs, and plots
   │   ├── marl/                     <- Multi-agent CSV logs and plots
   │   └── comparative_plots/        <- MARL vs. Fixed vs. Actuated figures
+  ├── scripts/                      <- High-level execution and visualization tools
+  │   ├── run_gui.py                <- Interactive SUMO-GUI micro-simulation player
+  │   ├── dashboard.py              <- Real-time web browser monitoring dashboard
+  │   └── generate_images.py        <- Paper-ready 300 DPI plot and diagram generator
   ├── src/                          <- Source code implementation
   │   ├── agents/                   <- MARL agent architectures
   │   │   ├── __init__.py

@@ -18,3 +18,4 @@ numpy>=1.24
 pandas>=2.0
 matplotlib>=3.7
 tensorboard>=2.12
+flask>=3.0
