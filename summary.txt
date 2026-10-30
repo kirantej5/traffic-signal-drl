@@ -1,0 +1,214 @@
+================================================================================
+     NEIGHBORHOOD-SCALE MULTI-AGENT TRAFFIC SIGNAL CONTROL & DYNAMIC ROUTING
+                 COMPREHENSIVE RESEARCH PROJECT ARCHITECTURE & SUMMARY
+================================================================================
+
+1. PROJECT OVERVIEW & RESEARCH VISION
+--------------------------------------------------------------------------------
+The objective of this project is to scale an existing single-intersection 
+Deep Q-Network (DQN) traffic controller into a neighborhood-scale, cooperative 
+Multi-Agent Reinforcement Learning (MARL) system paired with real-time dynamic 
+vehicle routing.
+
+While traditional single-intersection controllers minimize local queues, they 
+frequently shift congestion to neighboring junctions (the "spillback" effect). 
+This research project solves this fundamental limitation by establishing:
+  1. A coordinated network of intelligent intersection agents that communicate 
+     local traffic states with neighboring intersections.
+  2. A cooperative reinforcement learning policy (MAPPO / GNN-RL) that produces 
+     coordinated green-wave corridors across the urban grid.
+  3. A closed-loop vehicle rerouting engine that computes optimal dynamic paths 
+     for vehicles based on real-time traffic signal timings and road occupancies.
+  4. A rigorous evaluation framework that quantifies travel time saved, delay 
+     reduction, fuel/emissions abatement, throughput capacity, and network 
+     fairness for publication in top-tier Intelligent Transportation Systems (ITS) 
+     journals/conferences (e.g., IEEE T-ITS, IEEE ITSC).
+
+
+2. SYSTEM ARCHITECTURE & COMPONENTS
+--------------------------------------------------------------------------------
+The upgraded architecture consists of four tightly integrated subsystems:
+
+  +-----------------------------------------------------------------------+
+  |                        DYNAMIC ROUTING LAYER                         |
+  |  - Continuous travel-time estimation via TraCI                       |
+  |  - Dynamic Dijkstra/A* path reallocation for in-transit vehicles      |
+  |  - Prevents bottleneck oversaturation by distributing traffic flows   |
+  +-----------------------------------------------------------------------+
+                                     ^
+                                     | (Reroute Commands & Flow Adjustments)
+                                     v
+  +-----------------------------------------------------------------------+
+  |              NEIGHBORHOOD MARL CONTROL LAYER (PyTorch/CUDA)          |
+  |  - Multi-Agent PPO (MAPPO) with Centralized Training, Decentralized   |
+  |    Execution (CTDE)                                                  |
+  |  - Graph Neural Network (GNN) backbone capturing road network topology|
+  |  - Inter-agent message passing (state, queue, active phase sharing)   |
+  +-----------------------------------------------------------------------+
+                                     ^
+                                     | (Decentralized Actions & Observations)
+                                     v
+  +-----------------------------------------------------------------------+
+  |              MULTI-INTERSECTION GYMNASIUM ENVIRONMENT                |
+  |  - Class: MultiIntersectionEnv (wraps entire neighborhood)            |
+  |  - SINGLE shared TraCI connection managing all traffic lights (TLS)   |
+  |  - Synchronous stepping, yellow phase safety enforcement (4s)         |
+  |  - Real-time feature extraction for all incoming lanes               |
+  +-----------------------------------------------------------------------+
+                                     ^
+                                     | (TraCI Control & Sensor Commands)
+                                     v
+  +-----------------------------------------------------------------------+
+  |               MICROSCOPIC SIMULATION ENGINE (SUMO 1.28+)              |
+  |  - Grid network (e.g., 4x4 = 16 intersections, 5x5 = 25 intersections)|
+  |  - Multi-lane arms (Straight, Left-turn, Right-turn pockets)          |
+  |  - Heterogeneous traffic flows (passenger cars, buses, heavy trucks)  |
+  |  - Dynamic origin-destination (O-D) matrix demand patterns           |
+  +-----------------------------------------------------------------------+
+
+
+3. MATHEMATICAL & MARL FORMULATION
+--------------------------------------------------------------------------------
+The neighborhood system is formulated as a Decentralized Partially Observable 
+Markov Decision Process (Dec-POMDP) represented by:
+  < N, S, {A_i}, P, {R_i}, Omega, {O_i}, gamma >
+
+where N is the set of intersection agents {1, 2, ..., N_agents}.
+
+A. Local & Neighbor Observation Space (O_i):
+   For each intersection agent i, the observation vector s_i consists of:
+   1. Local incoming lane metrics (for each lane l in intersection i):
+      - Normalized Queue Length: q_i^l = min(1.0, HaltingVehicles / Capacity)
+      - Normalized Density:      d_i^l = min(1.0, TotalVehicles / Capacity)
+      - Normalized Average Speed: v_i^l = MeanSpeed / SpeedLimit
+   2. Current Signal Phase: One-hot encoded active phase index phi_i
+   3. Neighboring Intersection Features (1-hop neighbors j in NeighborSet(i)):
+      - Neighbor average queue length: Q_j
+      - Neighbor current phase: phi_j
+      - Approaching vehicle pressure between intersection j and i
+
+B. Discrete Action Space (A_i):
+   Each agent selects a non-conflicting green phase configuration:
+   - Action 0: North-South Through & Right Green
+   - Action 1: North-South Protected Left-Turn Green
+   - Action 2: East-West Through & Right Green
+   - Action 3: East-West Protected Left-Turn Green
+   (Phase changes automatically invoke a mandatory 4-second Yellow transition 
+    phase to ensure vehicle deceleration safety).
+
+C. Reward Formulation:
+   To prevent self-interested behavior where an agent dumps queues into neighbor 
+   links, agents optimize a Shared Cooperative Reward:
+      R_i(t) = alpha * R_local_i(t) + (1 - alpha) * R_neighbor_i(t)
+
+   Where:
+      R_local_i(t)    = - [ SUM(HaltingVehicles) + 0.1 * SUM(WaitingTime) ]
+      R_neighbor_i(t) = (1 / |N(i)|) * SUM_{j in N(i)} R_local_j(t)
+      alpha in [0.4, 0.6] balances local throughput with neighborhood harmony.
+
+
+4. CORE ALGORITHMS & METHODOLOGIES
+--------------------------------------------------------------------------------
+1. Multi-Agent PPO (MAPPO):
+   - Decentralized Actors: Each traffic signal agent has its own policy network 
+     that maps local + neighbor observations to green phase actions.
+   - Centralized Critic: During training, a centralized value network receives the 
+     global state of all intersections, accurately estimating value functions 
+     despite environmental non-stationarity.
+
+2. Graph Attention Network + Reinforcement Learning (GAT-RL):
+   - The road network is modeled as a directed graph G = (V, E), where nodes V 
+     represent intersections and edges E represent connecting arterial roads.
+   - Spatial self-attention layers compute dynamic edge weights based on 
+     real-time traffic congestion, allowing intersections to prioritize green 
+     phases along heavily congested corridors (automated "green wave").
+
+3. Dynamic Rerouting Engine:
+   - Vehicles periodically query the simulation for updated route travel times.
+   - Edge travel cost is calculated as:
+        Cost(e) = FreeFlowTime(e) * [ 1 + beta * (CurrentVolume(e) / Capacity(e))^4 ]
+     plus estimated queue delay at the downstream traffic signal.
+   - TraCI updates vehicle routes online using `traci.vehicle.rerouteTraveltime()`.
+
+
+5. KEY METRICS & EFFICIENCY CALCULATIONS
+--------------------------------------------------------------------------------
+To prove superior performance in a research paper, the following quantitative 
+metrics are tracked and compared against baseline controllers:
+
+1. Time Saved per Vehicle:
+      Delta_T = MeanWaitingTime_Baseline - MeanWaitingTime_MARL  (seconds/veh)
+
+2. Total Network Time Saved:
+      T_total_saved = Delta_T * TotalVehiclesProcessed  (hours)
+
+3. Travel Time Improvement Percentage:
+      Efficiency_Gain (%) = [ (T_baseline - T_MARL) / T_baseline ] * 100
+
+4. Network Throughput:
+      Throughput = (Total Arrived Vehicles / Simulation Duration in Hours)  (veh/hr)
+
+5. Environmental Impact (Emissions Reduction):
+      CO2_Reduction (%) = [ (CO2_baseline - CO2_MARL) / CO2_baseline ] * 100
+      (Computed using SUMO's vehicle emissions model: HBEFA3 standard).
+
+6. Green Wave Progression Score:
+      Percentage of vehicles passing >= 2 consecutive green lights without 
+      coming to a complete halt (speed < 0.1 m/s).
+
+7. Jain's Fairness Index (Intersection Equity):
+      Fairness = ( SUM(W_i) )^2 / [ N_agents * SUM(W_i^2) ]
+      Where W_i is average delay at intersection i. Ensures the agent does 
+      not starve minor streets to favor major arterials.
+
+
+6. BENCHMARKS FOR COMPARATIVE EVALUATION
+--------------------------------------------------------------------------------
+In the research paper, the proposed MARL + Dynamic Routing framework is 
+benchmarked against four standardized control strategies:
+  1. Fixed-Time Signal Control (Webster's formula with pre-timed cycle lengths).
+  2. Actuated Signal Control (SUMO built-in gap-based dynamic controllers).
+  3. Independent DQN (IDQN) (Individual agents without communication).
+  4. Random Baseline Controller (Lower-bound sanity baseline).
+
+
+7. CODEBASE DIRECTORY REORGANIZATION
+--------------------------------------------------------------------------------
+The project structure is structured as follows:
+
+  traffic-signal-drl/
+  ├── configs/                      <- Simulation and algorithm hyperparameters
+  │   ├── mappo_config.yaml         <- MAPPO learning rate, clipping, batch size
+  │   └── network_4x4.yaml          <- Grid dimensions, lane count, speed limits
+  ├── data/                         <- SUMO network and route configurations
+  │   ├── generate_neighborhood.py  <- Multi-intersection grid generator
+  │   ├── neighborhood.net.xml      <- Compiled 16/25-intersection grid network
+  │   ├── neighborhood.rou.xml      <- Peak/off-peak dynamic traffic flows
+  │   └── neighborhood.sumocfg      <- SUMO simulation configuration
+  ├── docs/                         <- Academic methodology and publications
+  │   ├── methodology.md            <- Detailed mathematical Dec-POMDP specification
+  │   └── paper_draft.md            <- IEEE manuscript draft
+  ├── models/                       <- Checkpoints and neural network weights
+  │   └── checkpoints/
+  ├── results/                      <- Output evaluation tables, logs, and plots
+  │   ├── marl/                     <- Multi-agent CSV logs and plots
+  │   └── comparative_plots/        <- MARL vs. Fixed vs. Actuated figures
+  ├── src/                          <- Source code implementation
+  │   ├── agents/                   <- MARL agent architectures
+  │   │   ├── __init__.py
+  │   │   ├── ippo_agent.py         <- Independent PPO agent
+  │   │   ├── mappo_agent.py        <- Centralized Critic MAPPO implementation
+  │   │   └── gnn_policy.py         <- Graph Attention Network policy head
+  │   ├── environment.py            <- Legacy single-intersection Gym env
+  │   ├── multi_env.py              <- MultiIntersectionEnv (Shared TraCI engine)
+  │   ├── communication.py          <- Neighbor message-passing routines
+  │   ├── routing.py                <- Dynamic vehicle rerouting algorithm
+  │   ├── metrics.py                <- Time saved, throughput, emissions calculator
+  │   ├── train_marl.py             <- Multi-agent training pipeline
+  │   ├── evaluate_marl.py          <- Benchmark evaluation and plotting suite
+  │   └── utils.py                  <- SUMO pathing, graph tools, GPU helpers
+  ├── checklist.txt                 <- Comprehensive implementation checklist
+  ├── summary.txt                   <- Complete architecture summary (this file)
+  └── requirements.txt              <- Python package dependencies
+================================================================================
+

@@ -1,0 +1,35 @@
+# Network Topology Configuration for 4x4 Grid Neighborhood
+topology:
+  type: "grid"
+  grid_size: 4
+  intersections_count: 16
+  block_length_meters: 200.0
+  lanes_per_direction: 2
+  speed_limit_mps: 13.89          # 50 km/h
+
+demand:
+  total_duration_seconds: 3600
+  vehicle_counts: 1670
+  peak_intervals:
+    - name: "morning_peak"
+      start_second: 300
+      end_second: 1800
+      flow_probability: 0.55
+    - name: "evening_peak"
+      start_second: 2100
+      end_second: 3300
+      flow_probability: 0.55
+    - name: "off_peak"
+      flow_probability: 0.25
+
+vehicle_classes:
+  passenger:
+    share: 0.85
+    emission_class: "HBEFA3/PC_G_EU4"
+  bus:
+    share: 0.10
+    emission_class: "HBEFA3/BUS"
+  truck:
+    share: 0.05
+    emission_class: "HBEFA3/HDV"
+

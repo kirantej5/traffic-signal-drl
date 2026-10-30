@@ -1,115 +1,132 @@
-# Methodology: GPU-Accelerated Deep Reinforcement Learning for Adaptive Traffic Signal Control
+# Methodology: Cooperative Multi-Agent Deep Reinforcement Learning for Neighborhood Traffic Control
 
-This document describes the technical architecture, mathematical formulation, and simulation details of the Adaptive Traffic Signal Control (ATSC) project.
+This document describes the formal mathematical formulation, multi-agent reinforcement learning architecture, and dynamic routing methodology of the **Neighborhood-Scale Adaptive Traffic Signal Control (ATSC)** framework.
 
 ---
 
-## 1. Problem Statement
+## 1. Problem Statement & Research Motivation
 
-Traditional traffic signal control systems use fixed-time or pre-timed schedules optimized for historical average traffic counts. However, real-world traffic patterns are highly dynamic, leading to severe congestion, increased travel delays, and unnecessary vehicle emissions during off-peak hours. 
+Conventional urban traffic light management depends largely on static pre-timed plans (e.g., Webster's cycle optimization) or isolated sensor-actuated controllers. While effective for isolated junctions with stationary traffic demand, these systems fail across connected urban networks. 
 
-Adaptive Traffic Signal Control (ATSC) dynamically adjusts signal timings based on real-time traffic states. In this project, we model the ATSC problem as a **Markov Decision Process (MDP)** and solve it using Deep Reinforcement Learning (DRL).
+When single-intersection reinforcement learning controllers optimize solely for their own local queue reduction, they inadvertently trigger **queue spillback**: flushing vehicles rapidly into downstream approach lanes creates severe gridlock at adjacent intersections.
+
+To solve this, we formulate neighborhood traffic control as a **Decentralized Partially Observable Markov Decision Process (Dec-POMDP)**. Multiple communicating intersection agents learn cooperative signal timing policies using **Multi-Agent Proximal Policy Optimization (MAPPO)** with a **Centralized Critic**, synchronized with an online **Dynamic Vehicle Routing** layer.
 
 ---
 
 ## 2. System Architecture
 
-The system consists of three main components:
-1. **Microscopic Traffic Simulator (SUMO)**: Simulates individual vehicle movements, lanes, junctions, and traffic lights.
-2. **Gymnasium Environment Wrapper**: Interfaces with SUMO via TraCI (Traffic Control Interface), processing simulation states into features and executing agent decisions.
-3. **DRL Agent (Stable-Baselines3 / PyTorch)**: Computes the optimal control policy using a Deep Q-Network (DQN) accelerated by GPU (CUDA).
+The upgraded architecture comprises four core layers interacting across a shared microscopic simulation:
 
 ```mermaid
 graph TD
-    subgraph DRL Agent [DRL Agent - PyTorch / CUDA]
-        Policy[Policy Network: Q-Network] -->|Action: Choose Green Phase| Env
-        Env -->|Reward & State| Loss[Loss Update / Replay Buffer]
-        Loss -->|Optimize| Policy
+    subgraph Routing [Dynamic Vehicle Routing Engine]
+        R1[Real-Time Link Impedance Monitor] --> R2[TraCI adaptTraveltime]
+        R2 --> R3[Dynamic Dijkstra Rerouter with Cooldown]
+    end
+
+    subgraph MARL [Neighborhood MARL Layer - PyTorch]
+        Policy[Decentralized Actor Policies: pi_theta] -->|Synchronous Phase Actions| Env
+        Env -->|Global Neighborhood State| Critic[Centralized Critic: V_phi]
+        Critic -->|GAE Advantages| PPO_Loss[PPO Clipped Surrogate Loss]
+        PPO_Loss -->|Gradient Optimization| Policy
     end
     
-    subgraph Gym Env [Gymnasium Environment Wrapper]
-        Env[SumoTrafficEnv] -->|TraCI Commands| SUMO[SUMO Simulator]
-        SUMO -->|Vehicle/Lane Metrics| Env
+    subgraph Gym [Gymnasium Multi-Agent Wrapper]
+        Env[MultiIntersectionEnv] -->|Single TraCI TCP Connection| SUMO[Eclipse SUMO Simulator]
+        SUMO -->|Lane Metrics & Topology| Env
     end
+
+    R3 -->|Updated Vehicle Routes| SUMO
 ```
 
 ---
 
-## 3. MDP Formulation
+## 3. Dec-POMDP Mathematical Formulation
 
-We formulate the single-intersection traffic signal control as an MDP with the tuple $(S, A, P, R, \gamma)$:
+The neighborhood intersection network is formulated as:
+$$\langle \mathcal{N}, \mathcal{S}, \{\mathcal{A}_i\}, \mathcal{P}, \{\mathcal{R}_i\}, \Omega, \{\mathcal{O}_i\}, \gamma \rangle$$
 
-### State Space ($S$)
-To represent traffic conditions accurately, we extract features for each of the $N$ incoming lanes controlled by the junction. For a standard 4-way intersection with 3 lanes per arm (Left, Straight, Right/Straight), there are $N = 12$ incoming lanes.
+### 3.1 Agents ($\mathcal{N}$)
+A set of $N$ intersection controllers $\mathcal{N} = \{1, 2, \dots, N\}$. In our standard urban benchmark, $N = 16$ arranged in a $4 \times 4$ arterial grid.
 
-For each lane $i$, the state vector contains:
-1. **Normalized Queue Length ($q_i$)**: The count of halting vehicles (speed $< 0.1 \text{ m/s}$) divided by the maximum vehicle capacity of the lane:
-   $$q_i = \min\left(1.0, \frac{\text{HaltingVehicles}_i}{\text{LaneLength}_i / 7.5}\right)$$
-2. **Normalized Vehicle Density ($d_i$)**: The total count of vehicles in the lane divided by capacity:
-   $$d_i = \min\left(1.0, \frac{\text{TotalVehicles}_i}{\text{LaneLength}_i / 7.5}\right)$$
+### 3.2 State & Observation Space ($\mathcal{O}_i$)
+Each intersection agent $i$ observes a continuous vector $s_i \in \mathbb{R}^{38}$ comprising two components:
 
-The observation space is a continuous vector $s \in \mathbb{R}^{24}$.
+1. **Local Lane Features** (for each controlled approach lane $l$):
+   - **Normalized Queue Length**:
+     $$q_i^l = \min\left(1.0, \frac{\text{HaltingVehicles}_l}{\text{LaneLength}_l / 7.5}\right)$$
+   - **Normalized Vehicle Density**:
+     $$d_i^l = \min\left(1.0, \frac{\text{TotalVehicles}_l}{\text{LaneLength}_l / 7.5}\right)$$
+   - **Normalized Mean Speed**:
+     $$v_i^l = \min\left(1.0, \frac{\text{MeanSpeed}_l}{\text{SpeedLimit}_l}\right)$$
+   - **Current Signal Phase**: One-hot representation of active green phase.
 
-### Action Space ($A$)
-The agent chooses from 4 discrete actions, each corresponding to a specific non-conflicting green phase configuration:
-* **Action 0**: North-South Straight & Right Green
-* **Action 1**: North-South Left-Turn Green
-* **Action 2**: East-West Straight & Right Green
-* **Action 3**: East-West Left-Turn Green
+2. **1-Hop Neighbor Context**:
+   For each adjacent neighbor $j \in \mathcal{N}(i)$ determined from the road network topology graph:
+   $$s_i^{neighbor} = \bigoplus_{j \in \mathcal{N}(i)} \left[ \bar{q}_j, \bar{d}_j, \frac{\phi_j}{K-1} \right]$$
+   Zero-padding is applied for boundary intersections to ensure uniform input dimensions.
 
-#### Yellow Phase Transition Logic
-For safety and realism, if the agent selects a green phase different from the currently active phase, a **yellow transition phase** of $t_{\text{yellow}} = 4$ seconds is executed before switching to the target green phase. This prevents sudden emergency stops and matches real-world signal operations.
+### 3.3 Action Space ($\mathcal{A}_i$)
+Each agent selects from discrete non-conflicting green phases:
+- **Action 0**: North-South Green (Phase 0)
+- **Action 1**: East-West Green (Phase 2)
 
-### Reward Function ($R$)
-We support multiple reward function designs:
-1. **Queue Penalty (Default)**: Penalizes the total number of halting vehicles:
-   $$R_t = -\sum_{i=1}^{N} \text{HaltingVehicles}_{i}$$
-2. **WaitingTime Penalty**: Penalizes the total time vehicles have spent waiting:
-   $$R_t = -\sum_{i=1}^{N} \text{WaitingTime}_{i}$$
-3. **Combined Reward**: A weighted linear combination of queues and delay:
-   $$R_t = - \left( 0.5 \sum_{i=1}^{N} q_i + 0.01 \sum_{i=1}^{N} w_i \right)$$
+#### Yellow Transition Phase Enforcement
+To adhere to realistic traffic engineering and vehicle deceleration dynamics, whenever an agent switches its active green phase, an automatic **4-second Yellow phase** is executed before the target green phase activates.
 
----
+### 3.4 Cooperative Reward Formulation ($\mathcal{R}_i$)
+To align individual intersection efficiency with neighborhood-wide congestion relief, agents optimize a **Shared Cooperative Reward**:
+$$R_i(t) = \alpha R_{local, i}(t) + (1 - \alpha) \frac{1}{|\mathcal{N}(i)|} \sum_{j \in \mathcal{N}(i)} R_{local, j}(t)$$
 
-## 4. Deep Q-Network (DQN) Algorithm
-
-The agent uses a Deep Q-Network to approximate the optimal action-value function $Q^*(s, a)$, which represents the expected cumulative discounted reward of taking action $a$ in state $s$:
-
-$$Q^*(s, a) = \mathbb{E} \left[ R_t + \gamma \max_{a'} Q^*(s_{t+1}, a') \mid s_t=s, a_t=a \right]$$
-
-### Neural Network Structure
-* **Input Layer**: 24 neurons (state vector)
-* **Hidden Layers**: Fully connected layers (`[128, 128]` neurons) with ReLU activation
-* **Output Layer**: 4 neurons (estimated Q-value for each phase action)
-
-### GPU Acceleration Setup
-The neural network computations (forward passes for action prediction, backward passes for parameter updates) are mapped to the **NVIDIA CUDA GPU**. Since PyTorch coordinates the gradient steps, GPU acceleration speeds up the training loop dramatically compared to CPU-only operations.
-
-```
-+-------------------------------------------------------+
-|                 PyTorch Training Loop (GPU)           |
-|                                                       |
-|  [Replay Buffer] --> [Batch Loader] --> [CUDA Device] |
-|                                               |       |
-|                                        Gradient Step  |
-|                                               v       |
-|  [Action Selection] <-- [Q-Network] <---------+       |
-+-------------------------------------------------------+
-                           |
-                     (CPU-GPU Boundary)
-                           |
-                           v
-+-------------------------------------------------------+
-|                 SUMO Simulator (CPU)                  |
-|                                                       |
-|   Step simulation --> Update positions --> TraCI API  |
-+-------------------------------------------------------+
-```
+Where:
+$$R_{local, i}(t) = -\sum_{l \in \mathcal{L}_i} \left( \text{HaltingVehicles}_l(t) + 0.05 \cdot \text{WaitingTime}_l(t) \right)$$
+The parameter $\alpha \in [0, 1]$ tunes the balance between local throughput and neighborhood coordination (default $\alpha = 0.5$).
 
 ---
 
-## 5. References
+## 4. Multi-Agent Reinforcement Learning (MAPPO)
 
-1. Liang, X., et al. "A Deep Reinforcement Learning Network for Traffic Light Cycle Control." *IEEE Transactions on Vehicular Technology*, 2019.
-2. Lopez, P. A., et al. "Microscopic Traffic Simulation using SUMO." *IEEE International Conference on Intelligent Transportation Systems*, 2018.
-3. Raffin, A., et al. "Stable-Baselines3: Reliable Reinforcement Learning Implementations." *Journal of Machine Learning Research*, 2021.
+To address the non-stationarity inherent in multi-agent environments (where simultaneous policy updates destabilize individual agent value predictions), we utilize **Centralized Training with Decentralized Execution (CTDE)**:
+
+1. **Decentralized Actor Network ($\pi_\theta$)**:
+   - Takes local + neighbor observation $s_i \in \mathbb{R}^{38}$.
+   - Fully connected MLP ($[128, 128]$ hidden units with Tanh activation).
+   - Outputs categorical distribution over discrete green phases.
+
+2. **Centralized Critic Network ($V_\phi$)**:
+   - Takes the concatenated global state vector $S = [s_1, s_2, \dots, s_N] \in \mathbb{R}^{38 \times N}$.
+   - Fully connected MLP ($[256, 128]$ hidden units with Tanh activation).
+   - Predicts global scalar value function $V_\phi(S)$.
+
+3. **Generalized Advantage Estimation (GAE)**:
+   $$\hat{A}_t = \sum_{l=0}^\infty (\gamma \lambda)^l \delta_{t+l}^V, \quad \delta_t^V = r_t + \gamma V_\phi(S_{t+1}) - V_\phi(S_t)$$
+
+4. **PPO Clipped Objective**:
+   $$L^{CLIP}(\theta) = \hat{\mathbb{E}}_t \left[ \min\left(r_t(\theta)\hat{A}_t, \, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t\right) \right]$$
+
+---
+
+## 5. Dynamic Vehicle Routing Engine
+
+Operating in parallel with signal control, the dynamic router updates SUMO's travel-time impedance model via TraCI:
+
+$$\text{Impedance}(e) = \frac{\text{Length}(e)}{\max(1.0, \bar{v}_e)} + 2.0 \cdot \text{HaltingVehicles}(e)$$
+
+- Every $\Delta t_{route} = 15$ seconds, updated edge impedances are broadcast via `traci.edge.adaptTraveltime()`.
+- En-route vehicles whose current speed drops below 50% of the speed limit are rerouted via `traci.vehicle.rerouteTraveltime()`.
+- A **30-second per-vehicle cooldown** is enforced to eliminate route oscillation and high-frequency path thrashing.
+
+---
+
+## 6. Evaluation Metrics & Standards
+
+The framework computes standardized performance indicators:
+1. **Average Travel Time & Delay**: Extracted from tripinfo XML output.
+2. **Time Saved per Vehicle**:
+   $$\Delta T = \bar{W}_{Fixed} - \bar{W}_{MAPPO} \quad (\text{seconds/veh})$$
+3. **Total Person-Hours Saved**:
+   $$T_{saved} = \frac{\Delta T \times N_{arrived}}{3600} \quad (\text{hours})$$
+4. **Vehicular Emissions Abatement**: Calculated using SUMO's HBEFA3 standard for CO₂ (kg) and Fuel (liters).
+5. **Jain's Fairness Index**:
+   $$F = \frac{\left(\sum_{i=1}^N W_i\right)^2}{N \sum_{i=1}^N W_i^2}$$

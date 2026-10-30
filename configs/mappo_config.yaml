@@ -1,0 +1,36 @@
+# Hyperparameter Configuration for Neighborhood MAPPO Controller
+environment:
+  net_file: "data/neighborhood.net.xml"
+  route_file: "data/neighborhood.rou.xml"
+  sumo_cfg: "data/neighborhood.sumocfg"
+  grid_size: 4
+  n_agents: 16
+  delta_time: 5
+  yellow_duration: 4
+  max_steps: 1800
+  alpha: 0.5                      # Cooperative reward mixing factor
+
+mappo:
+  lr_actor: 0.0003
+  lr_critic: 0.001
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_epsilon: 0.2
+  entropy_coef: 0.01
+  value_loss_coef: 0.5
+  rollout_len: 64
+  epochs: 4
+  batch_size: 64
+
+routing:
+  enabled: true
+  reroute_interval: 15            # Interval (seconds) between edge impedance checks
+  cooldown_period: 30             # Minimum seconds between rerouting the same vehicle
+  congestion_threshold: 0.5       # Trigger reroute if speed drops below 50% speed limit
+
+training:
+  episodes: 15
+  checkpoint_interval: 3
+  model_dir: "models/mappo"
+  results_dir: "results/marl"
+

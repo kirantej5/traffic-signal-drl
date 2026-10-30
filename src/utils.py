@@ -6,7 +6,7 @@ import torch
 
 def setup_sumo_paths():
     """Validates and sets SUMO_HOME path variables to ensure TraCI loads properly."""
-    if "SUMO_HOME" in os.environ:
+    if "SUMO_HOME" in os.environ and os.path.exists(os.environ["SUMO_HOME"]):
         tools = os.path.join(os.environ["SUMO_HOME"], "tools")
         if tools not in sys.path:
             sys.path.append(tools)
@@ -14,6 +14,8 @@ def setup_sumo_paths():
     else:
         # Standard system default search paths
         search_paths = [
+            r"C:\Program Files (x86)\SUMO\tools",
+            r"C:\Program Files\SUMO\tools",
             r"C:\Program Files (x86)\Eclipse\Sumo\tools",
             r"C:\Program Files\Eclipse\Sumo\tools",
             "/usr/share/sumo/tools",

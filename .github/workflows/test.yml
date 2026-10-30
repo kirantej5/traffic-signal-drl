@@ -1,4 +1,4 @@
-name: CI - Lint & Syntax Check
+name: CI - Lint & Multi-Agent Verification
 
 on:
   push:
@@ -7,11 +7,11 @@ on:
     branches: [ main ]
 
 jobs:
-  lint:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.10", "3.11"]
 
     steps:
       - name: Checkout repository
@@ -29,21 +29,40 @@ jobs:
           pip install flake8
           pip install -r requirements.txt
 
-      - name: Run flake8 linting
+      - name: Lint with flake8
         run: |
-          # Stop the build if there are Python syntax errors or undefined names
+          # Stop build on syntax errors or undefined names
           flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
-          # Treat all other issues as warnings
-          flake8 src/ --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
+          # Warnings on style
+          flake8 src/ --count --exit-zero --max-complexity=12 --max-line-length=120 --statistics
 
-      - name: Verify imports and Smoke Test
+      - name: Verify Multi-Agent Modules and Imports
         run: |
-          python -c "from src.environment import SumoTrafficEnv; print('Environment module OK')"
-          python -c "from src.utils import check_gpu_status; print('Utils module OK')"
+          python -c "from src.multi_env import MultiIntersectionEnv; print('MultiIntersectionEnv OK')"
+          python -c "from src.agents.mappo_agent import MAPPOTrafficController; print('MAPPO Controller OK')"
+          python -c "from src.agents.ippo_agent import IPPOController; print('IPPO Controller OK')"
+          python -c "from src.agents.gnn_policy import GNNTrafficPolicy; print('GNN Policy OK')"
+          python -c "from src.routing import DynamicRouter; print('Dynamic Router OK')"
+          python -c "from src.metrics import TrafficMetricsCalculator; print('Metrics Calculator OK')"
+          python -c "from src.environment import SumoTrafficEnv; print('Legacy Environment OK')"
+
+      - name: Neural Network Architecture Smoke Test
+        run: |
           python -c "
-          from src.environment import SumoTrafficEnv
-          env = SumoTrafficEnv(net_file='data/intersection.net.xml', route_file='data/intersection.rou.xml', sumo_cfg_file='data/intersection.sumocfg')
-          print('Environment instantiated successfully!')
-          assert env.action_space.n == 4
-          print('Smoke test passed!')
+          import torch
+          from src.agents.mappo_agent import MAPPOTrafficController
+          from src.agents.gnn_policy import GNNTrafficPolicy
+          
+          # Test MAPPO Network Forward Pass
+          mappo = MAPPOTrafficController(n_agents=4, obs_dim=38, action_dim=2, device='cpu')
+          dummy_obs = {f'TLS_{i}': torch.randn(38).numpy() for i in range(4)}
+          actions, log_probs, val, gstate = mappo.select_actions(dummy_obs)
+          assert len(actions) == 4
+          print('MAPPO forward pass verified!')
+          
+          # Test GNN Policy Forward Pass
+          gnn = GNNTrafficPolicy(node_feature_dim=26, hidden_dim=32, action_dim=2)
+          logits, values = gnn(torch.randn(4, 26), torch.eye(4))
+          assert logits.shape == (4, 2)
+          print('GNN policy verified!')
           "

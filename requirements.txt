@@ -1,9 +1,20 @@
-torch>=2.0,<2.3
-stable-baselines3[extra]>=2.0,<2.3
-gymnasium>=0.28,<0.30
-traci>=1.18,<1.20
-sumolib>=1.18,<1.20
-matplotlib>=3.7,<3.9
-numpy>=1.24,<2.0
-pandas>=2.0,<2.2
-tensorboard>=2.12,<2.14
+# Core DRL & Deep Learning Framework
+torch>=2.0
+stable-baselines3[extra]>=2.0
+gymnasium>=0.28
+
+# Multi-Agent & Graph Neural Network Extensions
+networkx>=3.0
+pyyaml>=6.0
+scipy>=1.10
+seaborn>=0.12
+
+# SUMO Simulation Interfaces
+traci>=1.18
+sumolib>=1.18
+
+# Data Processing & Visualization
+numpy>=1.24
+pandas>=2.0
+matplotlib>=3.7
+tensorboard>=2.12

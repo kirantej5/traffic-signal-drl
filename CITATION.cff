@@ -1,9 +1,16 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
+message: "If you use this software or cite this paper, please cite it as below."
 authors:
   - family-names: "Tej"
     given-names: "Kiran"
-title: "GPU-Accelerated Deep Reinforcement Learning for Adaptive Traffic Signal Control"
-version: 1.0.0
-date-released: 2026-07-14
+title: "Cooperative Multi-Agent Deep Reinforcement Learning with Dynamic Vehicle Routing for Neighborhood-Scale Traffic Signal Control"
+version: 2.0.0
+date-released: 2026-10-30
 url: "https://github.com/kirantej5/traffic-signal-drl"
+keywords:
+  - Multi-Agent Reinforcement Learning
+  - MAPPO
+  - Traffic Signal Control
+  - Dynamic Vehicle Routing
+  - SUMO Simulation
+  - Graph Neural Networks

@@ -4,16 +4,21 @@ import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
 
-# Ensure SUMO_HOME is added to PATH for TraCI to import sumolib/traci
-if "SUMO_HOME" in os.environ:
-    tools = os.path.join(os.environ["SUMO_HOME"], "tools")
-    sys.path.append(tools)
-else:
-    # Fallback to default Windows install location if not set
-    default_sumo_path = r"C:\Program Files (x86)\Eclipse\Sumo\tools"
-    if os.path.exists(default_sumo_path):
-        sys.path.append(default_sumo_path)
-        os.environ["SUMO_HOME"] = r"C:\Program Files (x86)\Eclipse\Sumo"
+# Ensure SUMO_HOME is set and tools directory added
+sumo_candidates = [
+    os.environ.get('SUMO_HOME', ''),
+    r'C:\Program Files (x86)\SUMO',
+    r'C:\Program Files\SUMO',
+    r'C:\Program Files (x86)\Eclipse\Sumo',
+    r'C:\Program Files\Eclipse\Sumo'
+]
+for candidate in sumo_candidates:
+    if candidate and os.path.exists(candidate):
+        os.environ['SUMO_HOME'] = candidate
+        tools_dir = os.path.join(candidate, 'tools')
+        if tools_dir not in sys.path:
+            sys.path.append(tools_dir)
+        break
 
 try:
     import traci
@@ -60,7 +65,10 @@ class SumoTrafficEnv(gym.Env):
         self.reward_type = reward_type
         self.delta_time = delta_time
         
-        self.sumo_binary = "sumo-gui" if self.use_gui else "sumo"
+        if sumolib is not None:
+            self.sumo_binary = sumolib.checkBinary('sumo-gui') if self.use_gui else sumolib.checkBinary('sumo')
+        else:
+            self.sumo_binary = 'sumo'
         self.is_closed = True
         self.step_counter = 0
         

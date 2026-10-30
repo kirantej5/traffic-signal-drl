@@ -28,7 +28,6 @@ share/python-wheels/
 # Unit test / coverage reports
 htmlcov/
 .tox/
-.nosexy/
 .coverage
 .coverage.*
 .cache
@@ -36,26 +35,7 @@ nosetests.xml
 coverage.xml
 *.cover
 *.py,cover
-.hypothesis/
 .pytest_cache/
-cover/
-
-# Translation files
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Jupyter Notebook
-.ipynb_checkpoints
 
 # IDE files
 .vscode/
@@ -72,5 +52,10 @@ instance/
 *.sbtr
 trips.trips.xml
 *output.xml
+results/*tripinfo.xml
+
+# Model weights and checkpoints
 models/*.zip
 models/checkpoints/
+models/mappo/mappo_ep_*.pt
+!models/mappo/mappo_traffic_final.pt

@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='utf-8'?>
+<configuration>
+    <input>
+        <net-file value="neighborhood.net.xml" />
+        <route-files value="neighborhood.rou.xml" />
+    </input>
+    <time>
+        <begin value="0" />
+        <end value="3600" />
+        <step-length value="1.0" />
+    </time>
+    <processing>
+        <time-to-teleport value="-1" />
+        <waiting-time-memory value="1000" />
+    </processing>
+    <report>
+        <no-step-log value="true" />
+        <no-warnings value="true" />
+    </report>
+    <output>
+        <tripinfo-output value="../results/neighborhood_tripinfo.xml" />
+    </output>
+</configuration>

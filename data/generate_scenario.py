@@ -3,6 +3,18 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
+# Resolve SUMO_HOME candidates
+sumo_candidates = [
+    r"C:\Program Files (x86)\SUMO",
+    r"C:\Program Files\SUMO",
+    os.environ.get("SUMO_HOME", ""),
+    r"C:\Program Files (x86)\Eclipse\Sumo"
+]
+for candidate in sumo_candidates:
+    if candidate and os.path.exists(candidate):
+        os.environ["SUMO_HOME"] = candidate
+        break
+
 def create_nodes_file(filepath):
     """Creates the nodes XML file for a standard 4-way intersection."""
     root = ET.Element("nodes")
@@ -50,11 +62,12 @@ def compile_network(nod_file, edg_file, net_file):
     """Compiles the network file using netconvert."""
     print("[Info] Compiling network using netconvert...")
     
-    # Check if SUMO_HOME is set
     sumo_home = os.environ.get("SUMO_HOME")
     netconvert_bin = "netconvert"
-    if sumo_home:
-        netconvert_bin = os.path.join(sumo_home, "bin", "netconvert")
+    if sumo_home and os.path.exists(sumo_home):
+        cand_bin = os.path.join(sumo_home, "bin", "netconvert.exe")
+        if os.path.exists(cand_bin):
+            netconvert_bin = cand_bin
         
     cmd = [
         netconvert_bin,
@@ -75,15 +88,10 @@ def compile_network(nod_file, edg_file, net_file):
         if isinstance(e, subprocess.CalledProcessError):
             print(f"netconvert Output: {e.stdout}", file=sys.stderr)
             print(f"netconvert Error: {e.stderr}", file=sys.stderr)
-        print("\n[Warning] Please verify that SUMO is installed and added to your system PATH or environment variable SUMO_HOME.", file=sys.stderr)
         return False
 
 def generate_route_file(filepath, num_steps=3600, passenger_flow_rate=0.15, truck_flow_rate=0.03):
-    """Generates realistic vehicle flows and routes for a 4-way intersection.
-    
-    passenger_flow_rate: probability of generating a passenger vehicle per second
-    truck_flow_rate: probability of generating a truck vehicle per second
-    """
+    """Generates realistic vehicle flows and routes for a 4-way intersection."""
     root = ET.Element("routes")
     
     # Vehicle types definitions
@@ -112,19 +120,14 @@ def generate_route_file(filepath, num_steps=3600, passenger_flow_rate=0.15, truc
     for route_id, edges in routes.items():
         ET.SubElement(root, "route", id=route_id, edges=edges)
         
-    # Generate random flows of vehicles dynamically over the steps
     import random
-    random.seed(42) # For reproducible route file generation
+    random.seed(42)
     
     veh_counter = 0
-    
-    # Add comment in XML
     root.append(ET.Comment("Vehicle flow definitions"))
     
     for step in range(num_steps):
-        # Sample for passenger cars
         for route_id in routes.keys():
-            # Check generation probability for passenger cars
             if random.random() < passenger_flow_rate / len(routes):
                 ET.SubElement(root, "vehicle", {
                     "id": f"veh_{veh_counter}",
@@ -136,7 +139,6 @@ def generate_route_file(filepath, num_steps=3600, passenger_flow_rate=0.15, truc
                 })
                 veh_counter += 1
                 
-            # Check generation probability for trucks
             if random.random() < truck_flow_rate / len(routes):
                 ET.SubElement(root, "vehicle", {
                     "id": f"veh_{veh_counter}",
@@ -175,7 +177,6 @@ def create_sumo_config(filepath, net_file, rou_file):
     print(f"[Info] Created SUMO configuration file: {filepath}")
 
 if __name__ == "__main__":
-    # Base directory set to where this file lives
     base_dir = os.path.dirname(os.path.abspath(__file__))
     
     nod_file = os.path.join(base_dir, "intersection.nod.xml")
