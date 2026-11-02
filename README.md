@@ -55,6 +55,8 @@
 
 Run `python scripts/run_gui.py` or `python scripts/dashboard.py` to reproduce the interactive views behind these images.
 
+These are repository screenshots and generated result figures. Re-run the GUI or dashboard commands to capture a live simulation session for a demo video.
+
 ---
 
 ## ✨ Features
