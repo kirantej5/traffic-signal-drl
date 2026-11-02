@@ -188,9 +188,9 @@ The project structure is structured as follows:
   │   └── neighborhood.sumocfg      <- SUMO simulation configuration
   ├── docs/                         <- Academic methodology and publications
   │   ├── methodology.md            <- Detailed mathematical Dec-POMDP specification
-  │   └── paper_draft.md            <- IEEE manuscript draft
-  ├── models/                       <- Checkpoints and neural network weights
-  │   └── checkpoints/
+   │   └── research_paper_draft.md   <- IEEE manuscript draft
+   ├── models/                       <- Trained neural network weights
+   │   └── mappo/                    <- Final checkpoint; periodic checkpoints are ignored
   ├── results/                      <- Output evaluation tables, logs, and plots
   │   ├── marl/                     <- Multi-agent CSV logs and plots
   │   └── comparative_plots/        <- MARL vs. Fixed vs. Actuated figures
@@ -205,8 +205,7 @@ The project structure is structured as follows:
   │   │   ├── mappo_agent.py        <- Centralized Critic MAPPO implementation
   │   │   └── gnn_policy.py         <- Graph Attention Network policy head
   │   ├── environment.py            <- Legacy single-intersection Gym env
-  │   ├── multi_env.py              <- MultiIntersectionEnv (Shared TraCI engine)
-  │   ├── communication.py          <- Neighbor message-passing routines
+   │   ├── multi_env.py              <- Shared TraCI environment and neighbor observations
   │   ├── routing.py                <- Dynamic vehicle rerouting algorithm
   │   ├── metrics.py                <- Time saved, throughput, emissions calculator
   │   ├── train_marl.py             <- Multi-agent training pipeline
@@ -216,4 +215,3 @@ The project structure is structured as follows:
   ├── summary.txt                   <- Complete architecture summary (this file)
   └── requirements.txt              <- Python package dependencies
 ================================================================================
-
