@@ -188,9 +188,9 @@ The project structure is structured as follows:
   │   └── neighborhood.sumocfg      <- SUMO simulation configuration
   ├── docs/                         <- Academic methodology and publications
   │   ├── methodology.md            <- Detailed mathematical Dec-POMDP specification
-   │   └── research_paper_draft.md   <- IEEE manuscript draft
-   ├── models/                       <- Trained neural network weights
-   │   └── mappo/                    <- Final checkpoint; periodic checkpoints are ignored
+   │   └── research_paper_draft.md  <- IEEE manuscript draft
+   ├── models/                      <- Trained neural network weights
+   │   └── mappo/                   <- Final checkpoint; periodic checkpoints are ignored
   ├── results/                      <- Output evaluation tables, logs, and plots
   │   ├── marl/                     <- Multi-agent CSV logs and plots
   │   └── comparative_plots/        <- MARL vs. Fixed vs. Actuated figures
@@ -211,7 +211,7 @@ The project structure is structured as follows:
   │   ├── train_marl.py             <- Multi-agent training pipeline
   │   ├── evaluate_marl.py          <- Benchmark evaluation and plotting suite
   │   └── utils.py                  <- SUMO pathing, graph tools, GPU helpers
-  ├── checklist.txt                 <- Comprehensive implementation checklist
-  ├── summary.txt                   <- Complete architecture summary (this file)
-  └── requirements.txt              <- Python package dependencies
+   ├── tests/                        <- Unit and SUMO integration tests
+   ├── requirements.txt              <- Flexible Python dependency ranges
+   └── requirements-pinned.txt       <- Tested direct dependency pins
 ================================================================================

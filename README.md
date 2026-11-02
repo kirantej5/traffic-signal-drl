@@ -8,6 +8,8 @@
 
 > A cooperative Multi-Agent Reinforcement Learning (MARL) framework pairing **Multi-Agent PPO (MAPPO)** and **Graph Attention Networks (GAT)** with **Dynamic Vehicle Routing** across an urban neighborhood grid in Eclipse SUMO.
 
+> **Tracked exploratory result:** across five seeds and a short two-episode/300-step evaluation, MAPPO + Dynamic Routing produced a mean paired queue difference of **−0.012 vehicles** versus fixed-time control. The 95% CI was **[−0.127615, 0.103615]** and `p = 0.78752811`; this result is not statistically significant and is not a publication-quality claim.
+
 ---
 
 ## 📸 System Overview
@@ -44,6 +46,15 @@
                       +---------------------------------------+
 ```
 
+## 🖼️ Visual Gallery
+
+| Architecture | SUMO simulation | Training and evaluation |
+| :---: | :---: | :---: |
+| ![System architecture](images/architecture.png) | ![SUMO simulation](images/sumo_simulation.png) | ![Training curve](images/training_curve.png) |
+| ![Queue length](images/queue_length.png) | ![Reward plot](images/reward_plot.png) | ![Comparative queue progression](results/comparative_plots/comparative_queue_progression.png) |
+
+Run `python scripts/run_gui.py` or `python scripts/dashboard.py` to reproduce the interactive views behind these images.
+
 ---
 
 ## ✨ Features
@@ -72,10 +83,12 @@ traffic-signal-drl/
 │   └── neighborhood.sumocfg      # SUMO simulation configuration
 ├── docs/
 │   ├── methodology.md            # Technical architecture and Dec-POMDP formulation
-│   └── research_paper_draft.md   # IEEE manuscript draft (T-ITS / ITSC)
+│   ├── research_paper_draft.md   # IEEE manuscript draft (T-ITS / ITSC)
+│   ├── implementation_checklist.md
+│   ├── project_summary.md
+│   └── reproducibility.md        # Scenario, model, and results provenance
 ├── models/
-│   ├── mappo/                    # Trained MAPPO checkpoints and final weights
-│   └── checkpoints/              # Periodic training weights
+│   └── mappo/                    # Tracked final weights; generated checkpoints are ignored
 ├── results/
 │   ├── marl/                     # CSV training and benchmark logs
 │   └── comparative_plots/        # 300 DPI publication-quality figures
@@ -92,10 +105,22 @@ traffic-signal-drl/
 │   ├── evaluate_marl.py          # Benchmark comparison suite
 │   ├── environment.py            # Legacy single-intersection Gym env
 │   └── utils.py                  # SUMO path helpers and graph utilities
-├── checklist.txt                 # Step-by-step project milestone tracker
-├── summary.txt                   # Complete project summary
-└── requirements.txt              # Python dependencies
+├── tests/                        # Unit and SUMO integration tests
+├── requirements.txt              # Flexible Python dependency ranges
+└── requirements-pinned.txt       # Tested direct dependency pins
 ```
+
+## 🧭 Script and artifact map
+
+| Component | Purpose | Main output |
+| :--- | :--- | :--- |
+| `data/generate_neighborhood.py` | Generate the 4×4 SUMO network and demand | `data/neighborhood.*` |
+| `src/train_marl.py` | Train MAPPO with cooperative rewards | `models/mappo/*.pt`, training log |
+| `src/evaluate_marl.py` | Compare fixed-time and MAPPO control | benchmark CSV and plot |
+| `scripts/run_statistical_analysis.py` | Run seeded experiments and paired t-test | `results/marl/statistical_analysis/` |
+| `scripts/dashboard.py` | Serve live browser monitoring | `http://localhost:5000` |
+| `scripts/run_gui.py` | Launch interactive SUMO-GUI run | SUMO-GUI window |
+| `docs/reproducibility.md` | Explain scenario, model, and result provenance | reproduction guidance |
 
 ---
 
