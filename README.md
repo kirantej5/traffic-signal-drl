@@ -151,12 +151,14 @@ python scripts/run_gui.py
 
 ## 📊 Benchmark Results
 
-| Control Strategy | Mean Halting Queue (veh) | Total Wait Time (s/veh) | Throughput (veh/hr) | CO₂ Abatement (%) |
-| :--- | :---: | :---: | :---: | :---: |
-| **Webster Fixed-Time** | 18.4 | 46.2 | 1,120 | Baseline |
-| **SUMO Actuated** | 11.2 | 29.8 | 1,280 | +12.4% |
-| **Independent PPO (IPPO)** | 7.9 | 19.4 | 1,390 | +21.8% |
-| **Proposed MAPPO + Routing** | **2.8** | **9.6** | **1,540** | **+36.5%** |
+The currently tracked benchmark summary records mean queue length for the fixed-time baseline and the proposed controller:
+
+| Control Strategy | Mean Queue (veh) | Improvement |
+| :--- | :---: | :---: |
+| **Fixed-Time Baseline** | 1.36 | Baseline |
+| **MAPPO + Dynamic Routing** | **0.24** | **82.21% lower** |
+
+Source: [`results/marl/benchmark_comparison_summary.csv`](results/marl/benchmark_comparison_summary.csv). Other metrics and controller comparisons should be added to the CSV before being presented as benchmark results.
 
 ---
 
