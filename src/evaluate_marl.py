@@ -12,6 +12,7 @@ Generates:
 
 import os
 import argparse
+import random
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -31,6 +32,7 @@ def parse_args():
     parser.add_argument("--eval-steps", type=int, default=600, help="Simulation steps per benchmark evaluation")
     parser.add_argument("--results-dir", type=str, default="results/marl", help="Directory for evaluation CSVs")
     parser.add_argument("--plots-dir", type=str, default="results/comparative_plots", help="Directory for paper figures")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducible evaluation")
     parser.add_argument("--gui", action="store_true", help="Launch SUMO GUI during evaluation")
     return parser.parse_args()
 
@@ -101,6 +103,9 @@ def generate_paper_plots(df_fixed, df_mappo, plots_dir):
 
 def evaluate():
     args = parse_args()
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    print(f" Random Seed: {args.seed}")
     os.makedirs(args.results_dir, exist_ok=True)
 
     print("=" * 65)
@@ -169,4 +174,3 @@ def evaluate():
 
 if __name__ == "__main__":
     evaluate()
-

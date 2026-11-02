@@ -109,6 +109,10 @@ Install Python dependencies:
 ```bash
 pip install -r requirements.txt
 ```
+For the tested reproducible dependency set:
+```bash
+pip install -r requirements.txt -c requirements-pinned.txt
+```
 
 ### 2. Generate the Neighborhood Scenario
 Generate the 4x4 grid network and dynamic peak traffic flows:
@@ -146,6 +150,22 @@ python scripts/run_gui.py
 - Compare with fixed-time baseline: `python scripts/run_gui.py --fixed-time`
 - Adjust playback speed: `python scripts/run_gui.py --delay 100` (delay in ms/step)
 - Controls inside SUMO-GUI: `[Space]` Play/Pause, `[Ctrl+A]` Fit all in view, `[+] / [-]` Speed up/slow down.
+
+### 6. Reproducible Multi-Seed Experiments
+
+Run the complete generate/train/evaluate/statistics workflow for five seeds:
+
+```bash
+python scripts/run_statistical_analysis.py \
+  --seeds 42,43,44,45,46 \
+  --episodes 2 \
+  --max-steps 300 \
+  --eval-steps 300
+```
+
+The script stores raw per-seed observations in `results/marl/statistical_analysis/per_seed_results.csv` and the paired t-test with a 95% confidence interval in `results/marl/statistical_analysis/paired_t_test.json`. Generated model checkpoints are stored under the ignored `models/checkpoints/statistical_analysis/` directory.
+
+Published exploratory result for seeds 42–46: mean paired difference **−0.012 vehicles**, 95% CI **[−0.127615, 0.103615]**, paired t-statistic **−0.288175**, and p-value **0.78752811**. This short two-episode experiment did not show a statistically significant improvement at α = 0.05; longer multi-seed runs are needed for publication-quality conclusions.
 
 ---
 

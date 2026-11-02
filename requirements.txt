@@ -19,3 +19,4 @@ pandas>=2.0
 matplotlib>=3.7
 tensorboard>=2.12
 flask>=3.0
+pytest>=8.0,<9.0

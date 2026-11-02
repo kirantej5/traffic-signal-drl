@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11"]
+        python-version: ["3.11", "3.12"]
 
     steps:
       - name: Checkout repository
@@ -23,11 +23,17 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
+      - name: Install SUMO for integration tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes sumo sumo-tools
+          echo "SUMO_HOME=/usr/share/sumo" >> "$GITHUB_ENV"
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install flake8
-          pip install -r requirements.txt
+          pip install -r requirements.txt -c requirements-pinned.txt
 
       - name: Lint with flake8
         run: |
@@ -44,7 +50,10 @@ jobs:
           python -c "from src.agents.gnn_policy import GNNTrafficPolicy; print('GNN Policy OK')"
           python -c "from src.routing import DynamicRouter; print('Dynamic Router OK')"
           python -c "from src.metrics import TrafficMetricsCalculator; print('Metrics Calculator OK')"
-          python -c "from src.environment import SumoTrafficEnv; print('Legacy Environment OK')"
+           python -c "from src.environment import SumoTrafficEnv; print('Legacy Environment OK')"
+
+      - name: Run automated tests
+        run: python -m pytest -q
 
       - name: Neural Network Architecture Smoke Test
         run: |

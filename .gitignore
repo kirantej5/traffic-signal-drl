@@ -57,5 +57,8 @@ results/*tripinfo.xml
 # Model weights and checkpoints
 models/*.zip
 models/checkpoints/
+artifacts/
+results/marl/statistical_analysis/runs/
+results/marl/statistical_analysis/plots/
 models/mappo/mappo_ep_*.pt
 !models/mappo/mappo_traffic_final.pt

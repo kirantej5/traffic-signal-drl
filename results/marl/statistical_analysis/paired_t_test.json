@@ -1,0 +1,21 @@
+{
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "sample_size": 5,
+  "metric": "mean network queue (vehicles)",
+  "paired_difference": "fixed-time mean queue - MAPPO mean queue",
+  "mean_difference": -0.012,
+  "confidence_level": 0.95,
+  "confidence_interval_95": [
+    -0.127615,
+    0.103615
+  ],
+  "paired_t_statistic": -0.288175,
+  "p_value": 0.78752811,
+  "significant_at_0_05": false
+}

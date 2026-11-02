@@ -9,6 +9,7 @@ Executes:
 
 import os
 import argparse
+import random
 import numpy as np
 import torch
 import pandas as pd
@@ -29,6 +30,7 @@ def parse_args():
     parser.add_argument("--model-dir", type=str, default="models/mappo", help="Directory to save model weights")
     parser.add_argument("--results-dir", type=str, default="results/marl", help="Directory to save training logs")
     parser.add_argument("--alpha", type=float, default=0.5, help="Cooperative reward factor")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducible training")
     parser.add_argument("--enable-routing", action="store_true", default=True, help="Enable dynamic vehicle rerouting")
     parser.add_argument("--gui", action="store_true", help="Launch SUMO GUI for visual inspection")
     return parser.parse_args()
@@ -36,6 +38,10 @@ def parse_args():
 
 def train():
     args = parse_args()
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    print(f" Random Seed: {args.seed}")
     os.makedirs(args.model_dir, exist_ok=True)
     os.makedirs(args.results_dir, exist_ok=True)
 
@@ -153,4 +159,3 @@ def train():
 
 if __name__ == "__main__":
     train()
-
